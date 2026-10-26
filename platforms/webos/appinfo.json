@@ -1,0 +1,14 @@
+{
+  "id": "com.yrajeh.iptvplayer",
+  "version": "0.1.0",
+  "vendor": "Youssef Rajeh",
+  "type": "web",
+  "main": "index.html",
+  "title": "IPTV Player",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "bgColor": "#0b0e14",
+  "resolution": "1920x1080",
+  "disableBackHistoryAPI": true,
+  "requiredPermissions": ["time.query"]
+}

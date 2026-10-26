@@ -1,0 +1,10 @@
+node_modules
+dist
+android
+ios
+platforms/*/app
+platforms/electron/node_modules
+platforms/electron/out
+*.wgt
+*.ipk
+.DS_Store
