@@ -682,6 +682,26 @@ html.tv .card:focus {
   color: var(--text-3);
 }
 
+.credit {
+  text-align: center;
+  color: var(--text-2);
+  margin-top: -0.75rem;
+}
+
+.credit strong {
+  color: var(--accent);
+}
+
+.link {
+  color: var(--accent);
+  text-decoration: none;
+  border-radius: 0.25rem;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
 .modal {
   position: fixed;
   inset: 0;

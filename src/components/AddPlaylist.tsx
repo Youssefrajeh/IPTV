@@ -192,6 +192,9 @@ export function AddPlaylist({ onAdd, onCancel, firstRun }: Props) {
         </button>
       </footer>
       <p className="legal small muted">This app is a player only and includes no channels. Use streams you have the rights to watch.</p>
+      <p className="credit small">
+        Created by <strong>Youssef Rajeh</strong>
+      </p>
     </form>
   );
 }

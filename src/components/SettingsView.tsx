@@ -108,6 +108,12 @@ export function SettingsView({ playlists, activeId, settings, refreshing, isTV, 
 
       <section className="panel">
         <h2>About</h2>
+        <p>
+          Created by <strong>Youssef Rajeh</strong> ·{' '}
+          <a className="link" href="https://youssefrajeh.com" target="_blank" rel="noopener noreferrer" data-focusable>
+            youssefrajeh.com
+          </a>
+        </p>
         <p className="muted small">
           Running as: {deviceName(isTV)} · Layout: {isTV ? 'TV' : 'Standard'}
         </p>
