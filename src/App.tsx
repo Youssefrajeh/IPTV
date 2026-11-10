@@ -80,7 +80,8 @@ export default function App() {
     (async () => {
       setLoading(true);
       try {
-        let d = await loadChannels(active.id);
+        // Free TV is bundled with the app, so always read the current copy (new channels, categories)
+        let d = active.source.kind === 'free' ? null : await loadChannels(active.id);
         if (!d) {
           d = await loadSource(active.source, settings);
           await saveChannels(active.id, d);
@@ -106,7 +107,10 @@ export default function App() {
 
   const counts = useMemo(() => {
     const m = new Map<string, number>();
-    data?.channels.forEach((c) => m.set(c.group, (m.get(c.group) ?? 0) + 1));
+    data?.channels.forEach((c) => {
+      m.set(c.group, (m.get(c.group) ?? 0) + 1);
+      c.extraGroups?.forEach((g) => m.set(g, (m.get(g) ?? 0) + 1));
+    });
     return m;
   }, [data]);
 
@@ -117,7 +121,7 @@ export default function App() {
     let base: Channel[];
     if (section === 'favorites') base = favorites.map((id) => byId.get(id)).filter(Boolean) as Channel[];
     else if (section === 'recent') base = recent.map((id) => byId.get(id)).filter(Boolean) as Channel[];
-    else base = group === ALL ? data.channels : data.channels.filter((c) => c.group === group);
+    else base = group === ALL ? data.channels : data.channels.filter((c) => c.group === group || !!c.extraGroups?.includes(group));
     const q = query.trim().toLowerCase();
     return q ? base.filter((c) => c.name.toLowerCase().includes(q)) : base;
   }, [data, section, group, query, favorites, recent, byId]);

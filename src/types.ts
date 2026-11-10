@@ -21,6 +21,8 @@ export interface Channel {
   url: string;
   logo?: string;
   group: string;
+  /** Extra categories the channel is also listed under (e.g. Arabic), besides `group` */
+  extraGroups?: string[];
   tvgId?: string;
   /** Xtream only, used for short EPG */
   streamId?: number;

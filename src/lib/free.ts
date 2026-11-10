@@ -28,6 +28,20 @@ export const FREE_PLAYLISTS: FreePlaylist[] = Object.keys(files)
   .map((p) => ({ id: idOf(p), label: labelOf(idOf(p)) }))
   .sort((a, b) => a.label.localeCompare(b.label));
 
+export const ARABIC = 'Arabic';
+
+// Arab League countries, as used in tvg-id suffixes like "AlArabiya.ae@SD"
+const ARAB_COUNTRIES = new Set('ae sa eg qa kw bh om jo lb sy iq ps ye ly tn dz ma sd mr so dj km'.split(' '));
+
+/** Arabic-language channels: from an Arab country, or clearly Arabic by name (BBC Arabic, MBC USA, …). */
+export function isArabic(c: Pick<Channel, 'name' | 'tvgId'>): boolean {
+  // English-language and Kurdish-language channels from the region are not Arabic
+  if (/\bEnglish\b|Kurd|Rudaw|Welat|Payam/i.test(c.name)) return false;
+  const country = c.tvgId?.match(/\.([a-z]{2})(?:@|$)/i)?.[1]?.toLowerCase();
+  if (country && ARAB_COUNTRIES.has(country)) return true;
+  return /\bArabi(c|ya)?\b|\bAl ?Jazeera\b|^MBC (\d|Masr|Drama|Action|Max|Iraq)|[؀-ۿ]/i.test(c.name);
+}
+
 /** Id of the combined playlist holding every category. */
 export const FREE_ALL = 'all';
 
@@ -40,10 +54,12 @@ async function allFreeChannels(): Promise<ChannelData> {
     for (const c of data.channels) {
       if (seen.has(c.url)) continue; // same stream listed in two categories: keep the first
       seen.add(c.url);
-      channels.push({ ...c, group: p.label });
+      channels.push({ ...c, group: p.label, extraGroups: isArabic(c) ? [ARABIC] : undefined });
     }
   }
-  return { channels, groups: sortGroups(new Set(channels.map((c) => c.group))) };
+  const groups = sortGroups(new Set(channels.map((c) => c.group)));
+  // Arabic goes at the top of the sidebar
+  return { channels, groups: channels.some((c) => c.extraGroups) ? [ARABIC, ...groups] : groups };
 }
 
 export async function freeChannels(id: string): Promise<ChannelData> {
