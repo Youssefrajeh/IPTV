@@ -3,7 +3,7 @@ import type { ChannelData, PlaylistSource } from '../types';
 import { parseM3U } from '../lib/m3u';
 import { normaliseServer } from '../lib/xtream';
 import { focusFirst } from '../lib/spatialNav';
-import { FREE_ALL, FREE_PLAYLISTS } from '../lib/free';
+import { FREE_ALL, FREE_COUNTRIES, FREE_PLAYLISTS, freeLabel } from '../lib/free';
 import { Icon } from './Icon';
 
 function readFile(f: File): Promise<string> {
@@ -32,6 +32,7 @@ export function AddPlaylist({ onAdd, onCancel, firstRun }: Props) {
   const [url, setUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [freeId, setFreeId] = useState(FREE_ALL);
+  const [countryQuery, setCountryQuery] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const root = useRef<HTMLFormElement>(null);
@@ -71,9 +72,10 @@ export function AddPlaylist({ onAdd, onCancel, firstRun }: Props) {
         if (freeId === FREE_ALL) {
           await onAdd(name || 'Free TV', { kind: 'free', id: FREE_ALL });
         } else {
-          const pick = FREE_PLAYLISTS.find((p) => p.id === freeId);
-          if (!pick) throw new Error('Choose a category.');
-          await onAdd(name || 'Free ' + pick.label, { kind: 'free', id: pick.id });
+          const label = freeLabel(freeId);
+          if (!label) throw new Error('Choose a category or a country.');
+          const isCountry = FREE_COUNTRIES.some((p) => p.id === freeId);
+          await onAdd(name || (isCountry ? label + ' TV' : 'Free ' + label), { kind: 'free', id: freeId });
         }
       } else {
         await onAdd('Demo streams', { kind: 'demo' });
@@ -85,11 +87,14 @@ export function AddPlaylist({ onAdd, onCancel, firstRun }: Props) {
     }
   };
 
+  const q = countryQuery.trim().toLowerCase();
+  const countries = q ? FREE_COUNTRIES.filter((p) => p.label.toLowerCase().includes(q)) : FREE_COUNTRIES;
+
   const tabs: Array<{ key: Tab; label: string }> = [
     { key: 'xtream', label: 'Xtream Codes' },
     { key: 'm3u-url', label: 'M3U link' },
     { key: 'm3u-file', label: 'M3U file' },
-    ...(FREE_PLAYLISTS.length ? [{ key: 'free' as const, label: 'Free TV' }] : []),
+    ...(FREE_PLAYLISTS.length || FREE_COUNTRIES.length ? [{ key: 'free' as const, label: 'Free TV' }] : []),
     { key: 'demo', label: 'Demo' },
   ];
 
@@ -196,6 +201,35 @@ export function AddPlaylist({ onAdd, onCancel, firstRun }: Props) {
                 </button>
               ))}
             </div>
+            {FREE_COUNTRIES.length > 0 && (
+              <>
+                <span>By country</span>
+                <input
+                  value={countryQuery}
+                  onChange={(e) => setCountryQuery(e.target.value)}
+                  placeholder="Search countries"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                />
+                <div className="chips chips--scroll" role="radiogroup">
+                  {countries.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={freeId === p.id}
+                      className={'chip' + (freeId === p.id ? ' is-active' : '')}
+                      data-focusable
+                      onClick={() => setFreeId(p.id)}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                  {!countries.length && <span className="muted small">No country matches.</span>}
+                </div>
+              </>
+            )}
             <span className="muted small">Public free-to-air streams. Some channels may be offline or region-locked.</span>
           </div>
         )}

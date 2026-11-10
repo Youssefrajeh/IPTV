@@ -561,6 +561,12 @@ html.tv .card:focus {
   gap: 0.5rem;
 }
 
+.chips--scroll {
+  max-height: 14rem;
+  overflow-y: auto;
+  padding: 0.125rem;
+}
+
 .chip {
   padding: 0.5rem 0.875rem;
   border-radius: 999px;
