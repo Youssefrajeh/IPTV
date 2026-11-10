@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Channel, ChannelData, Playlist, PlaylistSource, Section, Settings } from './types';
 import { defaultSettings, deleteChannels, keys, load, loadChannels, loadPlaylists, save, saveChannels, uid } from './lib/storage';
 import { loadSource } from './lib/loader';
+import { FREE_ALL, FREE_PLAYLISTS } from './lib/free';
 import { exitApp, platform, registerTVKeys, remoteAction, resolveTV } from './lib/platform';
 import { focusFirst, handleArrow, installFocusMemory } from './lib/spatialNav';
 import { AddPlaylist } from './components/AddPlaylist';
@@ -20,7 +21,7 @@ const NAV: Array<{ key: Section; label: string; icon: string }> = [
 
 export default function App() {
   const [settings, setSettings] = useState<Settings>(() => ({ ...defaultSettings, ...load<Partial<Settings>>(keys.settings, {}) }));
-  const [playlists, setPlaylists] = useState<Playlist[]>(loadPlaylists);
+  const [playlists, setPlaylists] = useState<Playlist[]>(seedPlaylists);
   const [activeId, setActiveId] = useState<string | null>(() => load<string | null>(keys.activePlaylist, null));
   const [data, setData] = useState<ChannelData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -376,6 +377,19 @@ export default function App() {
       <Toast text={toast} />
     </div>
   );
+}
+
+/**
+ * Preinstalls the combined Free TV playlist once per device. A flag (not the list contents)
+ * records it, so removing it in Settings sticks. Channels load on first open like any playlist.
+ */
+function seedPlaylists(): Playlist[] {
+  const list = loadPlaylists();
+  if (load<boolean>(keys.freeSeeded, false) || !FREE_PLAYLISTS.length) return list;
+  save(keys.freeSeeded, true);
+  if (list.some((p) => p.source.kind === 'free' && p.source.id === FREE_ALL)) return list;
+  // Existing users keep their current playlist active; it goes to the end of their list
+  return [...list, { id: uid(), name: 'Free TV', source: { kind: 'free', id: FREE_ALL }, addedAt: Date.now() }];
 }
 
 function Toast({ text }: { text: string }) {

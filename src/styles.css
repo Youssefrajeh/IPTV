@@ -555,6 +555,32 @@ html.tv .card:focus {
   color: var(--text);
 }
 
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip {
+  padding: 0.5rem 0.875rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--bg-2);
+  color: var(--text-2);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.chip:hover {
+  color: var(--text);
+}
+
+.chip.is-active {
+  background: var(--surface-3);
+  border-color: var(--text-2);
+  color: var(--text);
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -1380,6 +1406,7 @@ html.tv .card:hover {
 
 html.tv .btn:focus,
 html.tv .seg__btn:focus,
+html.tv .chip:focus,
 html.tv .icon-btn:focus {
   outline: none;
   background: var(--text);

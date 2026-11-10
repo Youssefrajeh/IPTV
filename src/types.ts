@@ -2,7 +2,8 @@ export type PlaylistSource =
   | { kind: 'm3u-url'; url: string; epgUrl?: string }
   | { kind: 'm3u-file'; fileName: string }
   | { kind: 'xtream'; server: string; username: string; password: string }
-  | { kind: 'demo' };
+  | { kind: 'demo' }
+  | { kind: 'free'; id: string };
 
 export interface Playlist {
   id: string;

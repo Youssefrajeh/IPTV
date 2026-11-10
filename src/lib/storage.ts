@@ -27,6 +27,7 @@ export const keys = {
   playlists: 'playlists',
   activePlaylist: 'activePlaylist',
   settings: 'settings',
+  freeSeeded: 'freeSeeded',
   favorites: (pid: string) => `fav.${pid}`,
   recent: (pid: string) => `recent.${pid}`,
   lastChannel: (pid: string) => `last.${pid}`,

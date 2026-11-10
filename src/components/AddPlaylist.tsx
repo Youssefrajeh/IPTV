@@ -3,6 +3,7 @@ import type { ChannelData, PlaylistSource } from '../types';
 import { parseM3U } from '../lib/m3u';
 import { normaliseServer } from '../lib/xtream';
 import { focusFirst } from '../lib/spatialNav';
+import { FREE_ALL, FREE_PLAYLISTS } from '../lib/free';
 import { Icon } from './Icon';
 
 function readFile(f: File): Promise<string> {
@@ -14,7 +15,7 @@ function readFile(f: File): Promise<string> {
   });
 }
 
-type Tab = 'xtream' | 'm3u-url' | 'm3u-file' | 'demo';
+type Tab = 'xtream' | 'm3u-url' | 'm3u-file' | 'free' | 'demo';
 
 interface Props {
   onAdd: (name: string, source: PlaylistSource, preloaded?: ChannelData) => Promise<void>;
@@ -30,6 +31,7 @@ export function AddPlaylist({ onAdd, onCancel, firstRun }: Props) {
   const [password, setPassword] = useState('');
   const [url, setUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [freeId, setFreeId] = useState(FREE_ALL);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const root = useRef<HTMLFormElement>(null);
@@ -65,6 +67,14 @@ export function AddPlaylist({ onAdd, onCancel, firstRun }: Props) {
         const data = parseM3U(text);
         if (!data.channels.length) throw new Error('No channels found in that file.');
         await onAdd(name || file.name.replace(/\.(m3u8?|txt)$/i, ''), { kind: 'm3u-file', fileName: file.name }, data);
+      } else if (tab === 'free') {
+        if (freeId === FREE_ALL) {
+          await onAdd(name || 'Free TV', { kind: 'free', id: FREE_ALL });
+        } else {
+          const pick = FREE_PLAYLISTS.find((p) => p.id === freeId);
+          if (!pick) throw new Error('Choose a category.');
+          await onAdd(name || 'Free ' + pick.label, { kind: 'free', id: pick.id });
+        }
       } else {
         await onAdd('Demo streams', { kind: 'demo' });
       }
@@ -79,6 +89,7 @@ export function AddPlaylist({ onAdd, onCancel, firstRun }: Props) {
     { key: 'xtream', label: 'Xtream Codes' },
     { key: 'm3u-url', label: 'M3U link' },
     { key: 'm3u-file', label: 'M3U file' },
+    ...(FREE_PLAYLISTS.length ? [{ key: 'free' as const, label: 'Free TV' }] : []),
     { key: 'demo', label: 'Demo' },
   ];
 
@@ -167,6 +178,28 @@ export function AddPlaylist({ onAdd, onCancel, firstRun }: Props) {
           </label>
         )}
 
+        {tab === 'free' && (
+          <div className="field">
+            <span>Category</span>
+            <div className="chips" role="radiogroup">
+              {[{ id: FREE_ALL, label: 'All categories' }, ...FREE_PLAYLISTS].map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={freeId === p.id}
+                  className={'chip' + (freeId === p.id ? ' is-active' : '')}
+                  data-focusable
+                  onClick={() => setFreeId(p.id)}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            <span className="muted small">Public free-to-air streams. Some channels may be offline or region-locked.</span>
+          </div>
+        )}
+
         {tab === 'demo' && (
           <p className="muted">
             Loads a few public test streams so you can try the player on this screen. No subscription needed.
@@ -191,7 +224,7 @@ export function AddPlaylist({ onAdd, onCancel, firstRun }: Props) {
           {busy ? 'Loading channels…' : tab === 'demo' ? 'Load demo' : 'Add playlist'}
         </button>
       </footer>
-      <p className="legal small muted">This app is a player only and includes no channels. Use streams you have the rights to watch.</p>
+      <p className="legal small muted">This app is a player. Free TV lists public streams published by third parties; use streams you have the rights to watch.</p>
       <p className="credit small">
         Created by <strong>Youssef Rajeh</strong>
       </p>

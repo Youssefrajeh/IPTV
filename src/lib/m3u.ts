@@ -57,7 +57,9 @@ export function parseM3U(text: string): ChannelData {
     if (line.startsWith('#EXTINF')) {
       const comma = titleSplit(line);
       const head = comma >= 0 ? line.slice(0, comma) : line;
-      const title = comma >= 0 ? line.slice(comma + 1).trim() : '';
+      let title = comma >= 0 ? line.slice(comma + 1).trim() : '';
+      // Some lists contain a mangled attribute run (e.g. a stray user-agent) before the real title
+      if (/[a-z-]+="[^"]*",/i.test(title)) title = title.slice(title.lastIndexOf('",') + 2).trim();
       const attrs = parseAttrs(head);
       pending = { name: title || attrs['tvg-name'] || 'Unknown', attrs };
       continue;
@@ -74,7 +76,8 @@ export function parseM3U(text: string): ChannelData {
     const url = line;
     const attrs = pending?.attrs ?? {};
     const name = pending?.name ?? url.split('/').pop() ?? 'Stream';
-    const group = (attrs['group-title'] || pending?.group || UNGROUPED).trim() || UNGROUPED;
+    // "News;Science" style multi-groups: file the channel under the first one
+    const group = (attrs['group-title'] || pending?.group || UNGROUPED).split(';')[0].trim() || UNGROUPED;
     let id = hash(url);
     if (seen.has(id)) id = hash(url + name + channels.length);
     seen.add(id);

@@ -1,5 +1,6 @@
 import type { ChannelData, PlaylistSource, Settings } from '../types';
 import { demoChannels } from './demo';
+import { FREE_ALL, FREE_PLAYLISTS, freeChannels } from './free';
 import { fetchText } from './http';
 import { parseM3U } from './m3u';
 import { xtreamLive, xtreamLogin } from './xtream';
@@ -9,6 +10,8 @@ export async function loadSource(source: PlaylistSource, settings: Settings): Pr
   switch (source.kind) {
     case 'demo':
       return demoChannels();
+    case 'free':
+      return freeChannels(source.id);
     case 'm3u-url': {
       const text = await fetchText(source.url);
       if (!/#EXTINF|#EXTM3U/i.test(text.slice(0, 5000))) {
@@ -34,6 +37,9 @@ export function describeSource(source: PlaylistSource): string {
   switch (source.kind) {
     case 'demo':
       return 'Demo test streams';
+    case 'free':
+      if (source.id === FREE_ALL) return 'Free TV · all categories';
+      return 'Free TV · ' + (FREE_PLAYLISTS.find((p) => p.id === source.id)?.label ?? source.id);
     case 'm3u-url':
       try {
         return 'M3U · ' + new URL(source.url).host;
