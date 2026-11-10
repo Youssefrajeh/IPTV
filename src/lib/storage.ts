@@ -47,6 +47,8 @@ let dbPromise: Promise<IDBDatabase | null> | null = null;
 function openDb(): Promise<IDBDatabase | null> {
   if (dbPromise) return dbPromise;
   dbPromise = new Promise((resolve) => {
+    // Some browsers/TVs leave open() pending forever (blocked upgrade or delete): fall back to memory
+    setTimeout(() => resolve(null), 3000);
     try {
       if (typeof indexedDB === 'undefined') return resolve(null);
       const req = indexedDB.open(DB_NAME, 1);

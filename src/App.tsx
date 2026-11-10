@@ -21,6 +21,7 @@ const NAV: Array<{ key: Section; label: string; icon: string }> = [
 
 export default function App() {
   const [settings, setSettings] = useState<Settings>(() => ({ ...defaultSettings, ...load<Partial<Settings>>(keys.settings, {}) }));
+  // Order matters: seeding may set the active playlist that the next line reads
   const [playlists, setPlaylists] = useState<Playlist[]>(seedPlaylists);
   const [activeId, setActiveId] = useState<string | null>(() => load<string | null>(keys.activePlaylist, null));
   const [data, setData] = useState<ChannelData | null>(null);
@@ -388,8 +389,10 @@ function seedPlaylists(): Playlist[] {
   if (load<boolean>(keys.freeSeeded, false) || !FREE_PLAYLISTS.length) return list;
   save(keys.freeSeeded, true);
   if (list.some((p) => p.source.kind === 'free' && p.source.id === FREE_ALL)) return list;
-  // Existing users keep their current playlist active; it goes to the end of their list
-  return [...list, { id: uid(), name: 'Free TV', source: { kind: 'free', id: FREE_ALL }, addedAt: Date.now() }];
+  // Free TV opens by default, also for people who already had playlists saved
+  const free: Playlist = { id: uid(), name: 'Free TV', source: { kind: 'free', id: FREE_ALL }, addedAt: Date.now() };
+  save(keys.activePlaylist, free.id);
+  return [free, ...list];
 }
 
 function Toast({ text }: { text: string }) {
